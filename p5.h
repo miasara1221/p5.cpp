@@ -1,11 +1,11 @@
 /*
-	p5.cpp, Version 0.5
+	p5.cpp, Version 0.5 :: p5.js
 	Copyright (c) 2021-04-05, SangGyu Gim
 */
 
 #pragma once
 
-#ifdef _P5_CPP
+#ifdef _DEV_P5_CPP
 	#define P5_DLL __declspec(dllexport)
 #else
 	#include <windows.h>
@@ -15,9 +15,7 @@
 #define P5_DLL __declspec(dllimport)
 #endif
 
-// typedef TCHAR tchar_t;
 using tchar_t = TCHAR;
-// typedef std::basic_string<tchar_t> tstring;
 using tstring = std::basic_string<tchar_t>;
 
 #ifdef _UNICODE
@@ -26,7 +24,7 @@ using tstring = std::basic_string<tchar_t>;
 	#define _V(x) std::to_string(x)
 #endif
 
-struct _PImage
+struct PImage
 {
 	ID2D1Bitmap* bitmap;
 	float width, height;
@@ -36,6 +34,13 @@ struct _PImage
 struct _PFont
 {
 	IDWriteTextFormat* textFormat;
+};
+
+struct _PKey {
+	tstring value;
+	tstring toString() {
+		return value;
+	}
 };
 
 constexpr int GDI = 1;
@@ -52,8 +57,8 @@ constexpr int  RIGHT_ARROW = 2;
 constexpr int  UP_ARROW = 3;
 constexpr int  DOWN_ARROW = 4;
 
-#ifdef _P5_CPP
-	#define MAX_LOADSTRING 100
+#ifdef _DEV_P5_CPP
+	constexpr size_t MAX_LOADSTRING = 100;
 	extern HINSTANCE hInst;                                // 현재 인스턴스입니다.
 	extern TCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
 	extern TCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
@@ -66,29 +71,26 @@ constexpr int  DOWN_ARROW = 4;
 	extern IDWriteFactory* g_pDWriteFactory;
 	extern IDWriteTextFormat* g_pTextFormat;
 	extern ID2D1SolidColorBrush* g_pColorBrush;
-	//extern float deltaTime;
 
 	int main(const HINSTANCE hInstance, const HINSTANCE hPrevInstance, const LPTSTR lpCmdLine, const int nCmdShow);
 	void swapBuffer(void);
 
-	//extern void (*g_pfnPreload)(void);
 	extern void (*g_pfnSetup)(void);
 	extern void (*g_pfnDraw)(void);
 #endif
 
-using PImage = _PImage*;
-using PFont = _PFont*;
+using PFont = _PFont&;
 
 extern P5_DLL int renderer;
+extern P5_DLL float deltaTime;
 extern P5_DLL float width, height;
 extern P5_DLL int mouseX, mouseY;
 extern P5_DLL bool mouseIsPressed;
 extern P5_DLL int mouseButton;
 extern P5_DLL bool keyIsPressed;
 extern P5_DLL int keyCode;
-extern P5_DLL float deltaTime;
+extern P5_DLL _PKey key;
 
-//P5_DLL void attachPreloadCallback(void (*function)(void));
 P5_DLL void attachSetupCallback(void (*function)(void));
 P5_DLL void attachDrawCallback(void (*function)(void));
 P5_DLL int run(const HINSTANCE hInstance, const HINSTANCE hPrevInstance, const LPTSTR lpCmdLine, const int nCmdShow);
@@ -97,23 +99,22 @@ P5_DLL float millis(void);
 
 P5_DLL void print(tstring str);
 
-P5_DLL bool _createCanvas(float w, float h, int renderer, bool vsync);
+P5_DLL bool createCanvas(float w, float h, int renderer, bool vsync);
 
-P5_DLL void _background(unsigned char r, unsigned char g, unsigned char b);
+P5_DLL void background(unsigned char r, unsigned char g, unsigned char b);
 
-P5_DLL PImage loadImage(tstring fileename);
-//P5_DLL void image(PImage img, float x, float y, float w, float h);
-P5_DLL void _image(PImage img, float dx, float dy, float dWidth, float dHeight, float sx, float sy, float sWidth, float sHeight);
+P5_DLL PImage& loadImage(tstring& fileename);
+P5_DLL void image(PImage& img, float dx, float dy, float dWidth, float dHeight, float sx, float sy, float sWidth, float sHeight);
 
 P5_DLL PFont loadFont(const tstring fontName);
 P5_DLL void textFont(PFont font);
 
 P5_DLL void text(tstring str, float x, float y);
 
-P5_DLL void _fill(unsigned char r, unsigned char g, unsigned char b, unsigned char a);
+P5_DLL void fill(unsigned char r, unsigned char g, unsigned char b, unsigned char a);
 P5_DLL void noFill();
 
-P5_DLL void _stroke(unsigned char r, unsigned char g, unsigned char b, unsigned char a);
+P5_DLL void stroke(unsigned char r, unsigned char g, unsigned char b, unsigned char a);
 P5_DLL void strokeWeight(float weight);
 P5_DLL void noStroke();
 
@@ -123,47 +124,55 @@ P5_DLL void circle(float x, float y, float r);
 P5_DLL void line(float x1, float y1, float x2, float y2);
 P5_DLL void point(float x, float y);
 
-inline bool createCanvas(float w, float h, int renderer = Direct2D, bool vsync = false) {
-	return _createCanvas(w, h, renderer, vsync);
+#ifndef _DEV_P5_CPP
+bool createCanvas(float w, float h) {
+	return createCanvas(w, h, Direct2D, false);
 }
 
-inline void background(unsigned char grayLevel) {
-	_background(grayLevel, grayLevel, grayLevel);
+bool createCanvas(float w, float h, int renderer) {
+	return createCanvas(w, h, renderer, false);
 }
 
-inline void background(unsigned char r, unsigned char g, unsigned char b) {
-	_background(r, g, b);
+void background(unsigned char grayLevel) {
+	background(grayLevel, grayLevel, grayLevel);
 }
 
-inline void image(PImage img, float x, float y) {
-	_image(img, x, y, img->width, img->height, 0, 0, img->width, img->height);
+void image(PImage img, float x, float y) {
+	image(img, x, y, img.width, img.height, 0, 0, img.width, img.height);
 }
 
-inline void image(PImage img, float x, float y, float w, float h) {
-	_image(img, x, y, w, h, 0, 0, img->width, img->height);
+void image(PImage img, float x, float y, float w, float h) {
+	image(img, x, y, w, h, 0, 0, img.width, img.height);
 }
 
-inline void image(PImage img, float dx, float dy, float dWidth, float dHeight, float sx, float sy, float sWidth, float sHeight) {
-	_image(img, dx, dy, dWidth, dHeight, sx, sy, sWidth, sHeight);
+void fill(unsigned char r, unsigned char g, unsigned char b) {
+	fill(r, g, b, 255);
 }
 
-inline void fill(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255) {
-	_fill(r, g, b, a);
+void stroke(unsigned char r, unsigned char g, unsigned char b) {
+	stroke(r, g, b, 255);
 }
+#endif
 
-inline void stroke(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255) {
-	_stroke(r, g, b, a);
-}
+#ifndef _DEV_P5_CPP
+template<typename T>
+T& ref() {
+	T* p = new T;
+	return *p;
+};
 
-#ifndef _P5_CPP
 void setup();
 void draw();
 
-int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
+int APIENTRY _tWinMain(
+	_In_ HINSTANCE hInstance,
+	_In_opt_ HINSTANCE hPrevInstance,
+	_In_ LPTSTR lpCmdLine,
+	_In_ int nShowCmd)
 {
 	// TODO: 여기에 코드를 입력합니다.
 	attachSetupCallback(setup);
 	attachDrawCallback(draw);
-	return run(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
+	return run(hInstance, hPrevInstance, lpCmdLine, nShowCmd);
 }
 #endif
