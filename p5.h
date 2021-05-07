@@ -8,11 +8,13 @@
 #ifdef _DEV_P5_CPP
 	#define P5_DLL __declspec(dllexport)
 #else
-	#include <windows.h>
+	#define WIN32_LEAN_AND_MEAN             // 거의 사용되지 않는 내용을 Windows 헤더에서 제외합니다.
+	#include <Windows.h>
 	#include <d2d1.h>
-	#include <tchar.h>
+	#include <dwrite.h>
 	#include <string>
-#define P5_DLL __declspec(dllimport)
+	#include <tchar.h>
+	#define P5_DLL __declspec(dllimport)
 #endif
 
 using tchar_t = TCHAR;
@@ -29,6 +31,7 @@ struct PImage
 	ID2D1Bitmap* bitmap;
 	float width, height;
 	unsigned char* pixels;
+	PImage() : bitmap(nullptr), width(0.0f), height(0.0f), pixels(nullptr) { }
 };
 
 struct _PFont
@@ -103,7 +106,7 @@ P5_DLL bool createCanvas(float w, float h, int renderer, bool vsync);
 
 P5_DLL void background(unsigned char r, unsigned char g, unsigned char b);
 
-P5_DLL PImage& loadImage(tstring& fileename);
+P5_DLL PImage& loadImage(tstring& filename);
 P5_DLL void image(PImage& img, float dx, float dy, float dWidth, float dHeight, float sx, float sy, float sWidth, float sHeight);
 
 P5_DLL PFont loadFont(const tstring fontName);
